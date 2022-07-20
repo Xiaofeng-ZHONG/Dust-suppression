@@ -1,9 +1,9 @@
-# Dust-suppression-scheme-for-tailings-reservoir
+Dust suppression scheme for tailings reservoir
 STM32F401CCU6 + EC-01 + E18-MS1 , access to Alibaba cloud IoT platform
 
 **This program is only for study and communication. Please do not reprint it without permission.**
 
-# 1 Material
+# 1 Main Modules
 ## 1.1 STM32F401CCU6
   dominant frequency-84MHz, SRAM-64K, FLASH-256K, packing-QFPN48, SIP FLASH-W25Q32 
   ![ad893ab3d014d3fc1fc95df5f497778b](https://user-images.githubusercontent.com/108401612/179658146-8f88fca5-268f-4248-8502-dcb1e77ae88f.jpeg)
