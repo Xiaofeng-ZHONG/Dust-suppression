@@ -691,38 +691,40 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){ //led  twinkle and 
 
 
 void Moisture_Get_and_Upload(void){
-	int address;float adc;int Serial_Num=item1.E18_mac_cnt+1;int judge;
-	if(item1.E18_mac_cnt==0){address=65535;}else{
-	address=Read_ADDR(Serial_Num);}
-	if (address==65529){
-				int addr_value=Get_ADDR(Serial_Num);
-				if (addr_value==-1){return;}
-				else{
-						L2[3]=(uint8_t)(addr_value/256);L2[4]=(uint8_t)(addr_value%256);
-						uint8_t W25Q32_write_buff[2]={L2[3],L2[4]};
-						Write_ADDR((unsigned char*)W25Q32_write_buff,Serial_Num);}			
-		}else{L2[3]=(uint8_t)(address/256);L2[4]=(uint8_t)(address%256);}
-		//printf("address:%d...",address);
-		
-		for(int j=0;j<5;j++){adc_list[j]=Get_ADC();}						//get adc value 5 times 
-		Array_sort();																						//Array sort
-		adc=(adc_list[1]+adc_list[2]+adc_list[3])/3;						//Eliminate the maximum and minimum values, then take the average value
-		adc=(3300-adc);																					//Change negative correlation data into positive correlation data
-		adc=(adc-1742)*100/(887);																//Using fuzzy mathematics to define humidity percentage
-		
-		if (adc>100){adc=100;}						//Set upper limit
-		if (adc<0){adc=0;}								//Set lower limit
-		
-		judge=adc_list[0];
-		memset((void*)&adc_list,0x00,sizeof(adc_list));
-	if ((judge==-1)||(item1.auto_control==0)){
-				int addr_value=Get_ADDR(Serial_Num);
-				if (addr_value==-1){return;}
-				else{
-					L2[3]=(uint8_t)(addr_value/256);L2[4]=(uint8_t)(addr_value%256);
-					uint8_t W25Q32_write_buff[2]={L2[3],L2[4]};
-					Write_ADDR((unsigned char*)W25Q32_write_buff,Serial_Num);}
-	}else{
+	if (item1.auto_control==0){;}
+	else{
+			int address;float adc;int Serial_Num=item1.E18_mac_cnt+1;int judge;
+			if(item1.E18_mac_cnt==0){address=65535;}else{
+			address=Read_ADDR(Serial_Num);}
+			if (address==65529){
+						int addr_value=Get_ADDR(Serial_Num);
+						if (addr_value==-1){return;}
+						else{
+								L2[3]=(uint8_t)(addr_value/256);L2[4]=(uint8_t)(addr_value%256);
+								uint8_t W25Q32_write_buff[2]={L2[3],L2[4]};
+								Write_ADDR((unsigned char*)W25Q32_write_buff,Serial_Num);}			
+				}else{L2[3]=(uint8_t)(address/256);L2[4]=(uint8_t)(address%256);}
+				//printf("address:%d...",address);
+				
+				for(int j=0;j<5;j++){adc_list[j]=Get_ADC();}						//get adc value 5 times 
+				Array_sort();																						//Array sort
+				adc=(adc_list[1]+adc_list[2]+adc_list[3])/3;						//Eliminate the maximum and minimum values, then take the average value
+				adc=(3300-adc);																					//Change negative correlation data into positive correlation data
+				adc=(adc-1742)*100/(887);																//Using fuzzy mathematics to define humidity percentage
+				
+				if (adc>100){adc=100;}						//Set upper limit
+				if (adc<0){adc=0;}								//Set lower limit
+				
+				judge=adc_list[0];
+				memset((void*)&adc_list,0x00,sizeof(adc_list));
+			if (judge==-1){
+						int addr_value=Get_ADDR(Serial_Num);
+						if (addr_value==-1){return;}
+						else{
+							L2[3]=(uint8_t)(addr_value/256);L2[4]=(uint8_t)(addr_value%256);
+							uint8_t W25Q32_write_buff[2]={L2[3],L2[4]};
+							Write_ADDR((unsigned char*)W25Q32_write_buff,Serial_Num);}
+			}
 		if ((adc>item1.MAX_Moisture)||(adc<item1.Min_Moisture)){
 					if (adc>item1.MAX_Moisture){item1.SV_state=0;item1.Pump_state=0,SV_operate(item1.SV_state,address);item1.Pump_state=Pump_operate(item1.Pump_state,Serial_Num);}
 					if (adc<item1.Min_Moisture){item1.SV_state=1;item1.Pump_state=1,SV_operate(item1.SV_state,address);item1.Pump_state=Pump_operate(item1.Pump_state,Serial_Num);}
@@ -784,8 +786,8 @@ void Moisture_Get_and_Upload(void){
 			
 			
 			}
+		}
 	}
-}
 
 
 int SV_operate(int SV_state,int ADDR){
