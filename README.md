@@ -2,6 +2,9 @@ Dust suppression scheme for tailings reservoir
 
 **This program is only for study and communication. Please do not reprint it without permission.**
 
+#run this code  first to store MAC address to W25Q32  before you run the  Dust suppression code
+
+
 # 1 Main Modules
 ## 1.1 STM32F401CCU6
   dominant frequency-84MHz, SRAM-64K, FLASH-256K, packing-QFPN48, SIP FLASH-W25Q32 
