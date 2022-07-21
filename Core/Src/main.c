@@ -724,8 +724,8 @@ void Moisture_Get_and_Upload(void){
 					Write_ADDR((unsigned char*)W25Q32_write_buff,Serial_Num);}
 	}else{
 		if ((adc>item1.MAX_Moisture)||(adc<item1.Min_Moisture)){
-					if (adc>item1.MAX_Moisture){item1.SV_state=0;item1.Pump_state=0;SV_operate(item1.SV_state,address);item1.Pump_state=Pump_operate(item1.Pump_state,Serial_Num);}
-					if (adc<item1.Min_Moisture){item1.SV_state=1;item1.Pump_state=1;SV_operate(item1.SV_state,address);item1.Pump_state=Pump_operate(item1.Pump_state,Serial_Num);}
+					if (adc>item1.MAX_Moisture){item1.SV_state=0;item1.Pump_state=0,SV_operate(item1.SV_state,address);item1.Pump_state=Pump_operate(item1.Pump_state,Serial_Num);}
+					if (adc<item1.Min_Moisture){item1.SV_state=1;item1.Pump_state=1,SV_operate(item1.SV_state,address);item1.Pump_state=Pump_operate(item1.Pump_state,Serial_Num);}
 				if (item1.report_data==1){
 							if(item1.interval_time>10){
 									char str1[300];
@@ -820,15 +820,15 @@ int SV_operate(int SV_state,int ADDR){
 int Pump_operate(int Pump_state,int Serial_Num){
 		int pump_on;int n;
 		if (item1.auto_control==0){
-				if(Pump_state==1){pump_on=1;HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4,GPIO_PIN_SET);}
-				else if(Pump_state==0){pump_on=0;HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4,GPIO_PIN_RESET);}
+				if(Pump_state==1){pump_on=1;HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6,GPIO_PIN_SET);}
+				else if(Pump_state==0){pump_on=0;HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6,GPIO_PIN_RESET);}
 		}else if (item1.auto_control==1){
 		Record_SV_state(Pump_state,Serial_Num);
 		n=Read_SV_state();
 		if (n==1){    // only when every pump state is off ,the pump will off.
-					pump_on=1;HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4,GPIO_PIN_SET);}
+					pump_on=1;HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6,GPIO_PIN_SET);}
 		else if(n==-1){ 
-				 pump_on=0;HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4,GPIO_PIN_RESET);}
+				 pump_on=0;HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6,GPIO_PIN_RESET);}
 		}
 		return pump_on;
 }
