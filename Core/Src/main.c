@@ -790,14 +790,24 @@ void Moisture_Get_and_Upload(void){
 
 int SV_operate(int SV_state,int ADDR){
 		int timeout=8;
-		uint8_t L3[8]={0xFD,0x05,0x21,0xFF,0xFF,0x03,0x01,0xFF}; //for setting gpio
+		uint8_t L1[8]={0xFD,0x05,0x20,0xFF,0xFF,0x03,0x00,0xFF}; //gpio output
+		uint8_t L2[8]={0xFD,0x05,0x21,0xFF,0xFF,0x03,0x01,0xFF}; //gpio output level
+		while(timeout--){
+						L1[3]=(uint8_t)(ADDR/256);L1[4]=(uint8_t)(ADDR%256);
+						HAL_UART_Transmit(&huart2,(void *)&L1,8,1000);
+						HAL_UART_Receive(&huart2, (void *)&usart2_rebuff, 4,1000);
+							if((usart2_rebuff[0] == 0xFA)&&(usart2_rebuff[1] == 0x20))
+									{
+										memset(usart2_rebuff,0x00,sizeof(usart2_rebuff));break;}
+							memset(usart2_rebuff,0x00,sizeof(usart2_rebuff));
+				}
 		while(timeout--){
 						if(SV_state==1){
-								L3[3]=(uint8_t)(ADDR/256);L3[4]=(uint8_t)(ADDR%256);L3[6]=0x01;}
+								L2[3]=(uint8_t)(ADDR/256);L2[4]=(uint8_t)(ADDR%256);L2[6]=0x01;}
 						else if (SV_state==0){
-								L3[3]=(uint8_t)(ADDR/256);L3[4]=(uint8_t)(ADDR%256);L3[6]=0x00;}
+								L2[3]=(uint8_t)(ADDR/256);L2[4]=(uint8_t)(ADDR%256);L2[6]=0x00;}
 						
-						HAL_UART_Transmit(&huart2,(void *)&L3,8,1000);
+						HAL_UART_Transmit(&huart2,(void *)&L2,8,1000);
 						HAL_UART_Receive(&huart2, (void *)&usart2_rebuff, 4,1000);
 							if((usart2_rebuff[0] == 0xFA)&&(usart2_rebuff[1] == 0x21))
 									{
@@ -809,11 +819,11 @@ int SV_operate(int SV_state,int ADDR){
 
 int Pump_operate(int Pump_state,int Serial_Num){
 		int pump_on;int n;
-		Record_SV_state(Pump_state,Serial_Num);
 		if (item1.auto_control==0){
 				if(Pump_state==1){pump_on=1;HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4,GPIO_PIN_SET);}
 				else if(Pump_state==0){pump_on=0;HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4,GPIO_PIN_RESET);}
 		}else if (item1.auto_control==1){
+		Record_SV_state(Pump_state,Serial_Num);
 		n=Read_SV_state();
 		if (n==1){    // only when every pump state is off ,the pump will off.
 					pump_on=1;HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4,GPIO_PIN_SET);}
@@ -910,8 +920,6 @@ void MY_UART1_RxCpltCallback(void){
 		{	
 					cJSON* item = cJSON_GetObjectItem(cjson,"params");
 						printf("\nJSON Parse OK...\n");
-					int Serial_Num=-1;
-					if(BF((void *)&usart1_copy, "Serial_Num")!=-1){Serial_Num=cJSON_GetObjectItem(item,"Serial_Num")->valueint;}
 					if(BF((void *)&usart1_copy, "auto_control")!=-1){item1.auto_control=cJSON_GetObjectItem(item,"auto_control")->valueint;}
 					if(BF((void *)&usart1_copy, "report_data")!=-1){item1.report_data=cJSON_GetObjectItem(item,"report_data")->valueint;}
 					if(BF((void *)&usart1_copy, "MAX_Moisture")!=-1){item1.MAX_Moisture=cJSON_GetObjectItem(item,"MAX_Moisture")->valueint;}
@@ -924,26 +932,34 @@ void MY_UART1_RxCpltCallback(void){
 					HAL_UART_Transmit(&huart6, (uint8_t *)"publish topic OK....\r\n",22,1000);
 					
 					//
-					if ((Serial_Num>=0)&&(Serial_Num<=mac_num)){
-					
+
+					int num1;int Serial_Num=-1;
+					char mach[7];
+					num1=BF((void *)&usart1_copy, (void *)"SV");
+					if(num1!=-1){
+					for (int k=0;k<7;k++){ mach[k]=usart1_copy[num1+k];}
+					sscanf(mach, "SV%d", &Serial_Num);
 					sprintf(str1,"SV%d",Serial_Num);
-					if(BF((void *)&usart1_copy, str1)!=-1){item1.SV_state=cJSON_GetObjectItem(item,str1)->valueint;}
+					item1.SV_state=cJSON_GetObjectItem(item,str1)->valueint;
 					//
 					int addr;
 					if(Serial_Num==1){addr=65535;}
 					else{addr=Read_ADDR(Serial_Num);}
 					if (SV_operate(item1.SV_state,addr)==-1){;}
 					else {
-							sprintf(str1,"AT+ECMTPUB=0,1,1,0,\"/sys/gc6pOMrLMi8/NB-IoT_EC-01-Kit/thing/event/property/post\",\"{\"params\":{\"SV%d\":{\"value\":%d},\"Serial_Num\":{\"value\":%d}}}\"\r\n",Serial_Num,item1.SV_state,Serial_Num);
+							sprintf(str1,"AT+ECMTPUB=0,1,1,0,\"/sys/gc6pOMrLMi8/NB-IoT_EC-01-Kit/thing/event/property/post\",\"{\"params\":{\"SV%d\":{\"value\":%d}}}\"\r\n",Serial_Num,item1.SV_state);
 							HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0xffff);while(HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX);
 							HAL_UART_Transmit(&huart6, (uint8_t *)"publish topic OK....\r\n",22,1000);
-					}
+					}}
 					//	
-					if(BF((void *)&usart1_copy, "Pump")!=-1){item1.Pump_state=cJSON_GetObjectItem(item,"Pump")->valueint;item1.Pump_state=Pump_operate(item1.Pump_state,Serial_Num);}
-					sprintf(str1,"AT+ECMTPUB=0,1,1,0,\"/sys/gc6pOMrLMi8/NB-IoT_EC-01-Kit/thing/event/property/post\",\"{\"params\":{\"Pump\":{\"value\":%d},\"Serial_Num\":{\"value\":%d}}}\"\r\n",item1.Pump_state,Serial_Num);
+					
+
+					if(BF((void *)&usart1_copy, "Pump")!=-1){
+					item1.Pump_state=cJSON_GetObjectItem(item,"Pump")->valueint;item1.Pump_state=Pump_operate(item1.Pump_state,Serial_Num);
+					sprintf(str1,"AT+ECMTPUB=0,1,1,0,\"/sys/gc6pOMrLMi8/NB-IoT_EC-01-Kit/thing/event/property/post\",\"{\"params\":{\"Pump\":{\"value\":%d}}}\"\r\n",item1.Pump_state);
 					HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0xffff);while(HAL_UART_GetState(&huart1) == HAL_UART_STATE_BUSY_TX);
 					HAL_UART_Transmit(&huart6, (uint8_t *)"publish topic OK....\r\n",22,1000);
-				}	
+					}
 				//						
 		}cJSON_Delete(cjson);
 		memset(usart1_copy,0x00,sizeof(usart1_copy));
