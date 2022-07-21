@@ -3,7 +3,7 @@ Dust suppression scheme for tailings reservoir
 **This program is only for study and communication. Please do not reprint it without permission.**
 
 # Before you run the  Dust suppression code
-run anothor code  first to store MAC address to SIP FLASH (W25Q32)  [Go to progect](https://github.com/Xiaofeng-ZHONG/Store_MAC_address_to_W25Q32.git)
+run anothor code  first to store MAC address to SIP FLASH (W25Q32)  [Go to project](https://github.com/Xiaofeng-ZHONG/Store_MAC_address_to_W25Q32.git)
 
 
 # 1 Main Modules
